@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MNIST Digit Classifier</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Draw a digit</h1>
+    <p class="subtitle">Classified live by a PyTorch MLP trained on MNIST</p>
+
+    <canvas id="draw-canvas" width="280" height="280"></canvas>
+
+    <div class="controls">
+      <button id="predict-btn">Predict</button>
+      <button id="clear-btn">Clear</button>
+    </div>
+
+    <section id="result" class="result">
+      <div class="prediction" id="prediction-display">&nbsp;</div>
+      <div class="bars" id="bars"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

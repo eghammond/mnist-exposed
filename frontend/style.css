@@ -163,3 +163,10 @@ button {
   color: var(--text-primary);
   font-weight: 700;
 }
+
+.error-message {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}

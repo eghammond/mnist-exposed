@@ -122,28 +122,48 @@ function renderBars(probabilities, prediction) {
   });
 }
 
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// The free-tier host spins down after inactivity, so the request that wakes
+// it back up can fail while the container is still starting. Retry a couple
+// times before giving up, since it typically resolves within a few seconds.
 async function predict() {
   const pixels = canvasTo28x28();
 
   predictBtn.disabled = true;
-  try {
-    const res = await fetch("/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pixels }),
-    });
-    if (!res.ok) throw new Error(`Server error: ${res.status}`);
-    const { prediction, probabilities } = await res.json();
-    predictionDisplay.textContent = prediction;
-    renderBars(probabilities, prediction);
-  } catch (err) {
-    predictionDisplay.textContent = "?";
-    barsContainer.innerHTML = "";
-    console.error(err);
-    alert("Prediction failed. Is the backend running?");
-  } finally {
-    predictBtn.disabled = false;
+  predictionDisplay.textContent = "…";
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pixels }),
+      });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const { prediction, probabilities } = await res.json();
+      predictionDisplay.textContent = prediction;
+      renderBars(probabilities, prediction);
+      break;
+    } catch (err) {
+      console.error(err);
+      if (attempt < MAX_ATTEMPTS) {
+        predictionDisplay.textContent = "Waking up the server…";
+        await sleep(RETRY_DELAY_MS);
+      } else {
+        predictionDisplay.textContent = "?";
+        barsContainer.innerHTML =
+          '<p class="error-message">Couldn\'t reach the server. Please try again.</p>';
+      }
+    }
   }
+
+  predictBtn.disabled = false;
 }
 
 predictBtn.addEventListener("click", predict);
